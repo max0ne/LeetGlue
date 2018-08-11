@@ -1,11 +1,11 @@
+/**
+ * code in contentscript.js
+ * added "web_accessible_resources": ["injected.js"] to manifest.json
+ */
+var s = document.createElement('script');
+s.src = chrome.runtime.getURL('js/injected.js');
+s.onload = function () {
+  this.remove();
+};
 
-chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
-    if (msg.color) {
-        console.log('Receive color = ' + msg.color);
-        document.body.style.backgroundColor = msg.color;
-        sendResponse('Change color to ' + msg.color);
-    } else {
-        sendResponse('Color message is none.');
-    }
-});
-
+(document.head || document.documentElement).appendChild(s);
