@@ -33,6 +33,12 @@
     "*://developer.mozilla.org/",
     "*://*.google.com/",
     "*://*.leetcode.com/",
-    "debugger"
-  ]
+    "debugger",
+    "notifications"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "*://*.leetcode.com/*"
+    ]
+  }
 }

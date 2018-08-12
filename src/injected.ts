@@ -1,5 +1,3 @@
-import * as handleRequest from './handle_requests';
-
 /**
  * copy pasta code from https://stackoverflow.com/a/48134114
  * intercept http requests
@@ -60,12 +58,13 @@ import * as handleRequest from './handle_requests';
         }
 
         try {
-          handleRequest.onRequest({
+          const injectedRequest = {
             url: this._url,
             requestHeaders: tryParse(this._requestHeaders) || this._requestHeaders,
             responseBody: tryParse(this.responseText) || this.responseText,
             responseHeaders,
-          });
+          };
+          chrome.runtime.sendMessage('fggchiinmngbohjgbmdfmjolgealcaji', injectedRequest);
         }
         catch (err) {
           console.error('LeetGlue Failure', err);

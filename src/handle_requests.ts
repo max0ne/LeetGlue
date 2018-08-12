@@ -33,7 +33,8 @@ const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
     return;
   }
 
-  const submission = pendingSubmissions.find((sub) => ((sub.responseBody as SubmissionResponse).submission_id || '').toString() == subid);
+  const submission = pendingSubmissions.find((sub) => (
+    (sub.responseBody as SubmissionResponse).submission_id || '').toString() == subid);
   // submission request not found - unexpected, should toast some error
   if (!submission) {
     // TODO: toast err
@@ -58,7 +59,13 @@ const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
   const msg = 'auto created commit by LeetGlue';
   const api = new GithubAPI(token);
   const githubFile = (await api.getFile(user, repo, filename).catch(() => { })) || { };
-  console.log('done', await api.putFileContent(user, repo, filename, msg, typed_code, githubFile.sha));
+  const putFileResponse = await api.putFileContent(user, repo, filename, msg, typed_code, githubFile.sha);
+  chrome.notifications.create(putFileResponse.commit.sha, {
+    type: 'basic',
+    title: 'LeetGlue',
+    message: `💪 <${filename}> Pushed to your Github`,
+    iconUrl: chrome.runtime.getURL('Octocat.png'),
+  });
 }
 
 const fileExtensions = {
