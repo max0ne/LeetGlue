@@ -37,4 +37,15 @@ export default class GithubAPI {
     }
     return (await this.client.put(`/repos/${owner}/${repo}/contents/${path}`, body)).data;
   }
+
+  /**
+   * create new file if doenst exists
+   * update file if exists
+   */
+  createOrUpdateFileContent = async (
+    owner: string, repo: string,
+    path: string, message: string, content: string) => {
+    const sha = (await this.getFile(owner, repo, path).catch(() => ({}))).sha;
+    return this.putFileContent(owner, repo, path, message, content, sha);
+  }
 }

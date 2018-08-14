@@ -1,6 +1,14 @@
 import axios from 'axios';
 import * as _ from 'lodash';
 
+import {
+  AllProblemResponse,
+  LatestSubmissionResponse,
+  StatStatusPair,
+} from './util/types';
+import * as util from './util/util';
+import GithubAPI, * as githubAPI from './util/github_api';
+
 import { modifyRequest } from './util/modify_request';
 
 const getAllCookie: ((url: string) => Promise<chrome.cookies.Cookie[]>) = 
@@ -63,13 +71,56 @@ export default class ImportSubmissionsController {
       ]);
 
     // query for `all problems` api
-    let allProblems = [];
     try {
-      const allProblems = (await axios.get('https://leetcode.com/api/problems/all/')).data;
-      console.log((await axios.post('https://leetcode.com/submissions/latest/', { "qid": "175", "lang": "mysql" })).data);
+      const allProblems = (await axios.get('https://leetcode.com/api/problems/all/')).data as AllProblemResponse;
+      const acStats = allProblems.stat_status_pairs
+        .filter((ss) => ss.status === 'ac');
+      console.log(`${acStats.length} problems status === 'ac'`, acStats);
+
+      // post to github with every submission
+      const github = new GithubAPI(await util.getStorage('github_token'));
+      const langPref = await util.getStorage('language_prefs') as string[];
+
+      for (const stat of acStats) {
+        console.log(stat.stat.question__title, await this._syncToGithub(stat, langPref, github));
+      }
     } catch (err) {
       console.log({ err });
     }
     chrome.webRequest.onBeforeSendHeaders.removeListener(requestModifier);
   }
+
+  _syncToGithub = async (statStatus: StatStatusPair, langPref: string[], githubAPI: GithubAPI) => {
+    try {
+      const submission = await this._queryQuestion(statStatus.stat.question_id, langPref);
+      if (!submission) {
+        return false;
+      }
+      await githubAPI.createOrUpdateFileContent(
+        await util.getStorage('github_owner') as string,
+        await util.getStorage('github_repo') as string,
+        statStatus.stat.question__title_slug,
+        'auto created commit by LeetGlue',
+        submission
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * query submission of a problem of a certain language preference
+   * return undefined if unable to query submission
+   */
+  _queryQuestion = async (qid: number, langPref: string[]) => {
+    for (const lang of langPref) {
+      const param = { qid: qid.toString(), lang };
+      const resp = await axios.post('https://leetcode.com/submissions/latest/', param).catch(() => undefined);
+      if (resp && resp.data && resp.data.code) {
+        return resp.data.code;
+      }
+    }
+    return undefined;
+  };
 }

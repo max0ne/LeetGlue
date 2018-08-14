@@ -1,12 +1,13 @@
 import * as UrlPattern from 'url-pattern';
 import * as _ from 'lodash';
-import GithubAPI from './github_api';
+import GithubAPI from './util/github_api';
+import * as util from './util/util';
 import {
   CheckResponse,
   SubmissionResponse,
   InjectedRequest,
   fileExtensions,
-} from './types';
+} from './util/types';
 
 export const checkPattern = new UrlPattern('*/submissions/detail/:subid/check*');
 export const submissionPattern = new UrlPattern('*/problems/:probname/submit*');
@@ -48,10 +49,9 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
   }
   
   const filename = `${probname}.${fileExtensions[resp.lang] || resp.lang}`;
-  // TODO: add storage for these
-  const token = '= =';
-  const user = 'max0ne';
-  const repo = 'test';
+  const token = await util.getStorage('github_token');
+  const user = await util.getStorage('github_owner') as string;
+  const repo = await util.getStorage('github_repo') as string;
   const msg = 'auto created commit by LeetGlue';
   const api = new GithubAPI(token);
   const githubFile = (await api.getFile(user, repo, filename).catch(() => { })) || { };
@@ -59,7 +59,7 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
   chrome.notifications.create(putFileResponse.commit.sha, {
     type: 'basic',
     title: 'LeetGlue',
-    message: `💪 <${filename}> Pushed to your Github`,
+    message: `💪 [${filename}] Pushed to your Github`,
     iconUrl: chrome.runtime.getURL('Octocat.png'),
   });
 }
