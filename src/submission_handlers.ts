@@ -1,30 +1,26 @@
 import * as UrlPattern from 'url-pattern';
 import * as _ from 'lodash';
 import GithubAPI from './github_api';
+import {
+  CheckResponse,
+  SubmissionResponse,
+  InjectedRequest,
+  fileExtensions,
+} from './types';
 
-const checkPattern = new UrlPattern('*/submissions/detail/:subid/check*');
-const submissionPattern = new UrlPattern('*/problems/:probname/submit*');
-
-export const onRequest = (injectedRequest: InjectedRequest) => {
-  const checkMatch = checkPattern.match(injectedRequest.url);
-  const submitMatch = submissionPattern.match(injectedRequest.url);
-  if (checkMatch && checkMatch.subid) {
-    handleCheck(injectedRequest, checkMatch.subid);
-  } else if (submitMatch) {
-    handleSubmission(injectedRequest, submitMatch.probname);
-  }
-}
+export const checkPattern = new UrlPattern('*/submissions/detail/:subid/check*');
+export const submissionPattern = new UrlPattern('*/problems/:probname/submit*');
 
 /**
  * list of pending submission requests
  */
 const pendingSubmissions = [] as InjectedRequest[];
 
-const handleSubmission = (injectedRequest: InjectedRequest, probname: string) => {
+export const handleSubmission = (injectedRequest: InjectedRequest, probname: string) => {
   pendingSubmissions.push(injectedRequest);
 }
 
-const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
+export const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
   const resp = injectedRequest.responseBody as CheckResponse;
   if (resp.state !== 'SUCCESS') {
     return;
@@ -43,7 +39,7 @@ const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
   }
   _.pull(pendingSubmissions, submission);
 
-  const { typed_code } = submission.requestHeaders;
+  const { typed_code } = submission.postData;
   const { probname } = submissionPattern.match(submission.url);
   if (!typed_code || !probname) {
     // TODO: toast err
@@ -66,56 +62,4 @@ const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
     message: `💪 <${filename}> Pushed to your Github`,
     iconUrl: chrome.runtime.getURL('Octocat.png'),
   });
-}
-
-const fileExtensions = {
-  python: 'py',
-  python3: 'py',
-  c: 'c:',
-  cpp: 'cpp',
-  csharp: 'cs',
-  java: 'java',
-  javascript: 'js',
-  ruby: 'rb',
-  golang: 'go',
-  swift: 'swift',
-  scala: 'scala',
-  kotlin: 'kt',
-  bash: 'sh',
-  mysql: 'sql',
-  mssql: 'sql',
-  oraclesql: 'sql',
-};
-
-export interface RequestHeaders {
-  [key: string]: string;
-}
-
-export interface CheckResponse {
-  status_code: number;
-  code_output: string;
-  std_output: string;
-  compare_result: string;
-  status_runtime: string;
-  display_runtime: string;
-  question_id: string;
-  user_id: number;
-  lang: string;
-  judge_type: string;
-  run_success: boolean;
-  total_correct: number;
-  total_testcases: number;
-  status_msg: string;
-  state: string;
-}
-
-export interface SubmissionResponse {
-  submission_id: number;
-}
-
-export interface InjectedRequest {
-  url: string;
-  requestHeaders: RequestHeaders;
-  responseBody: any;
-  responseHeaders: string;
 }

@@ -40,7 +40,7 @@
           if (typeof postData === 'string') {
             try {
               // here you get the REQUEST HEADERS, in JSON format, so you can also use JSON.parse
-              this._requestHeaders = postData;
+              this._postData = postData;
             } catch (err) {
               console.log('Request Header JSON decode failed, transfer_encoding field could be base64');
               console.log(err);
@@ -60,7 +60,8 @@
         try {
           const injectedRequest = {
             url: this._url,
-            requestHeaders: tryParse(this._requestHeaders) || this._requestHeaders,
+            postData: tryParse(this._postData) || this._postData,
+            requestHeaders: this._requestHeaders,
             responseBody: tryParse(this.responseText) || this.responseText,
             responseHeaders,
           };
