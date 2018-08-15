@@ -1,6 +1,6 @@
 import { InjectedRequest } from './util/types';
-import * as submission_handlers from './submission_handlers';
-import ImportSubmissionsController from './ImportSubmissionsController';
+import * as submission_handlers from './controller/HandleSubmission';
+import ImportSubmissionsController from './controller/ImportSubmissions';
 
 console.log('backgddd');
 
@@ -19,9 +19,9 @@ chrome.notifications.onClicked.addListener((noteID) => {
 });
 
 chrome.storage.sync.set({
-  github_token: '',
+  github_token: '= =',
   github_owner: 'max0ne',
-  github_repo: 'test',
+  github_repo: 'leetcode',
   language_prefs: ['python3', 'python', 'mysql'],
 });
 

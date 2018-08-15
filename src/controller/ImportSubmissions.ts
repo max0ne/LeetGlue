@@ -3,18 +3,12 @@ import * as _ from 'lodash';
 
 import {
   AllProblemResponse,
-  LatestSubmissionResponse,
   StatStatusPair,
-} from './util/types';
-import * as util from './util/util';
-import GithubAPI, * as githubAPI from './util/github_api';
+} from '../util/types';
+import * as util from '../util/util';
+import GithubAPI from '../util/github_api';
 
-import { modifyRequest } from './util/modify_request';
-
-const getAllCookie: ((url: string) => Promise<chrome.cookies.Cookie[]>) = 
-  (url: string) => (new Promise((resolve) => {
-  chrome.cookies.getAll({ url }, resolve);
-}));
+import { modifyRequest } from '../util/modify_request';
 
 export default class ImportSubmissionsController {
   doImport = async () => {
@@ -27,7 +21,7 @@ export default class ImportSubmissionsController {
 
     // 2. wait for first request that has leetcode cookie set
     const intervalToken = setInterval(async () => {
-      const cookies = await getAllCookie('https://leetcode.com');
+      const cookies = await util.getAllCookie('https://leetcode.com');
       // use `csrftoken` in cookie as signal that user had successfully logged in
       // since can't really get any callback, just do a setInterval thing
       if (_.isEmpty(cookies.find((cookie) => cookie.name === 'csrftoken'))) {
@@ -72,22 +66,32 @@ export default class ImportSubmissionsController {
 
     // query for `all problems` api
     try {
-      const allProblems = (await axios.get('https://leetcode.com/api/problems/all/')).data as AllProblemResponse;
-      const acStats = allProblems.stat_status_pairs
-        .filter((ss) => ss.status === 'ac');
-      console.log(`${acStats.length} problems status === 'ac'`, acStats);
-
-      // post to github with every submission
-      const github = new GithubAPI(await util.getStorage('github_token'));
-      const langPref = await util.getStorage('language_prefs') as string[];
-
-      for (const stat of acStats) {
-        console.log(stat.stat.question__title, await this._syncToGithub(stat, langPref, github));
-      }
+      await this._syncAllToGithub();
     } catch (err) {
       console.log({ err });
     }
     chrome.webRequest.onBeforeSendHeaders.removeListener(requestModifier);
+  }
+
+  _syncAllToGithub = async () => {
+    // 1. get all problems
+    const allProblems = (await axios.get('https://leetcode.com/api/problems/all/')).data as AllProblemResponse;
+
+    // 2. filter out all accepted problems
+    const acStats = allProblems.stat_status_pairs
+      .filter((ss) => ss.status === 'ac');
+    console.log(`${acStats.length} problems status === 'ac'`, acStats);
+
+    // 3. post to github with every submission
+    const github = new GithubAPI(await util.getStorage('github_token'));
+    const langPref = await util.getStorage('language_prefs') as string[];
+
+    // 4. fire a bunch of workers to do submissions together
+    // wait for all of them to finish
+    while (!_.isEmpty(acStats)) {
+      const stat = acStats.pop();
+      console.log(`sync stuff`, stat.stat.question__title, await this._syncToGithub(stat, langPref, github));
+    }
   }
 
   _syncToGithub = async (statStatus: StatStatusPair, langPref: string[], githubAPI: GithubAPI) => {
@@ -96,12 +100,13 @@ export default class ImportSubmissionsController {
       if (!submission) {
         return false;
       }
+      const [codeContent, lang] = submission;
       await githubAPI.createOrUpdateFileContent(
         await util.getStorage('github_owner') as string,
         await util.getStorage('github_repo') as string,
-        statStatus.stat.question__title_slug,
+        util.fileName(statStatus.stat.question__title_slug, lang),
         'auto created commit by LeetGlue',
-        submission
+        codeContent,
       );
       return true;
     } catch {
@@ -118,7 +123,7 @@ export default class ImportSubmissionsController {
       const param = { qid: qid.toString(), lang };
       const resp = await axios.post('https://leetcode.com/submissions/latest/', param).catch(() => undefined);
       if (resp && resp.data && resp.data.code) {
-        return resp.data.code;
+        return [resp.data.code as string, lang];
       }
     }
     return undefined;

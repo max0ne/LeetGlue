@@ -25,7 +25,7 @@ function restore_options() {
   chrome.storage.sync.get({
     favoriteColor: 'red',
     likesColor: true
-  }, function(items: {favoriteColor, likesColor}) {
+  }, function(items: {favoriteColor: any, likesColor: any}) {
     $('#color').val(items.favoriteColor);
     $('#like').prop('checked', items.likesColor);
   });
