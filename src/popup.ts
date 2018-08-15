@@ -3,10 +3,6 @@ import * as $ from 'jquery';
 import * as React from "react";
 import './style.css';
 
-interface HelloProps { compiler: string; framework: string; }
-
-const Hello = (props: HelloProps) => (<h1>Hello from {props.compiler} and {props.framework}!</h1>);
-
 let count = 0;
 
 $(function() {

@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        popup: path.join(__dirname, '../src/popup.tsx'),
+        popup: path.join(__dirname, '../src/popup.ts'),
         options: path.join(__dirname, '../src/options.ts'),
         background: path.join(__dirname, '../src/background.ts'),
         content_script: path.join(__dirname, '../src/content_script.ts'),
@@ -23,7 +23,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 use: 'awesome-typescript-loader'
             },
             {
@@ -55,7 +55,7 @@ module.exports = {
         "react-dom": "ReactDOM"
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js']
+        extensions: ['.ts', '.js']
     },
     plugins: [
         // exclude locale files in moment
