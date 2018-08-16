@@ -21,8 +21,30 @@ const testCredentials = async (cookies: chrome.cookies.Cookie[]) => {
   }
 };
 
-const aquireLeetCodeCredential = async () => (new Promise((resolve) => {
+/**
+ * aquireLeetCodeCredential - a async process to try to aquire user credentials from leetcode.com
+ * 
+ * it does:
+ * 1. launch a leetcode login page
+ * 2. read and test cookie from browser periodically
+ * 3. whenever there is a valid cookie, return a leetcode api instance with cookie set
+ * 
+ * if the user had already logged in to leetcode.com and a valid credential is already in 
+ */
+const aquireLeetCodeCredential = async () => (new Promise(async (resolve) => {
 
+  // 0.  test existing credentails before launching a login page
+  // since leetcode's cookie rarely expires
+  // it's more likely that we can already read a valid credential from existing browser storage
+  // in which case can just silently success and return
+  const cookies = await util.getAllCookie('https://leetcode.com');
+  const resp = await testCredentials(cookies);
+  if (!_.isNil(resp)) {
+    return resolve(resp);
+  }
+
+  // if cannot read a valid credential from browser storage
+  // launch a login page so that user logins to get a new set of credentials
   let leetCodeTokenStealerTabID = undefined;
 
   // 1. launch a Leetcode page to steal at least one request with cookie set

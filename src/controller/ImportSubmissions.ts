@@ -18,13 +18,13 @@ interface ImportErr {
 
 export default class ImportSubmissionsController {
 
-  doImport = async (langPref: string[], addLog: (log: string) => void) => {
+  doImport = async (langPref: string[]) => {
     // 1. aquire credentials
-    addLog('aquiring credentials');
+    console.log('aquiring credentials');
     const [leetCodeAPI, allProblemsResponse] = await aquireLeetCodeCredential();
-    addLog('aquired credentials');
+    console.log('aquired credentials');
     const allAcceptedProblems = allProblemsResponse.stat_status_pairs.filter((pair) => pair.status === 'ac');
-    addLog(`queried total ${allProblemsResponse.stat_status_pairs.length} problems, importing ${allAcceptedProblems.length} accepted problems`);
+    console.log(`queried total ${allProblemsResponse.stat_status_pairs.length} problems, importing ${allAcceptedProblems.length} accepted problems`);
 
     // 2. continue app logic
     this._importProblems(
@@ -35,9 +35,9 @@ export default class ImportSubmissionsController {
       (err, problem, index, total) => {
         const progress = `[${index}/${total}]`;
         if (err) {
-          addLog(`${progress} unable to import problem ${problem.stat.question__title}, err ${err}`);
+          console.error(`${progress} unable to import problem ${problem.stat.question__title}, err ${err}`);
         } else {
-          addLog(`${progress} problem imported ${problem.stat.question__title}`)
+          console.log(`${progress} problem imported ${problem.stat.question__title}`)
         }
       },
     );
