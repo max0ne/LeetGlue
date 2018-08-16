@@ -26,5 +26,5 @@ setTimeout(() => {
     language_prefs: ['python3', 'python', 'mysql'],
   });
 
-  (new ImportSubmissionsController()).doImport(['python3', 'python', 'mysql']);
+  // (new ImportSubmissionsController()).doImport(['python3', 'python', 'mysql']);
 }, 1000);

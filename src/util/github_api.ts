@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { Base64 } from 'js-base64';
+import * as types from './types';
 
 export default class GithubAPI {
   client: AxiosInstance;
@@ -11,6 +12,23 @@ export default class GithubAPI {
       },
       baseURL: 'https://api.github.com',
     });
+  }
+
+  /**
+   * get currently signed in user
+   * useful for testing api token valid
+   */
+  getUser = async () => {
+    return (await this.client.get(`/user`)).data as types.GithubUserResponse;
+  }
+
+  /**
+   * get repo detail
+   * useful for checking if current user has `push` permission to this repo
+   * use (await api.getRepo(owner, repo)).permissions.push to check for having push permission
+   */
+  getRepo = async (owner: string, repo: string) => {
+    return (await this.client.get(`/repos/${owner}/${repo}`)).data as types.RepoResponse;
   }
 
   /**
