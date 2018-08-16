@@ -18,13 +18,15 @@ chrome.notifications.onClicked.addListener((noteID) => {
   chrome.tabs.create({ url: `https://github.com/max0ne/test/commit/${noteID}` });
 });
 
-chrome.storage.sync.set({
-  github_token: '= =',
-  github_owner: 'max0ne',
-  github_repo: 'leetcode',
-  language_prefs: ['python3', 'python', 'mysql'],
-});
-
 setTimeout(() => {
-  (new ImportSubmissionsController()).doImport();
+  chrome.storage.sync.set({
+    github_token: '= =',
+    github_owner: 'max0ne',
+    github_repo: 'leetcode',
+    language_prefs: ['python3', 'python', 'mysql'],
+  });
+
+  (new ImportSubmissionsController()).doImport(['python3', 'python', 'mysql'], (log) => {
+    console.log(log);
+  });
 }, 1000);

@@ -1,104 +1,71 @@
-import axios from 'axios';
 import * as _ from 'lodash';
 
 import {
-  AllProblemResponse,
   StatStatusPair,
 } from '../util/types';
+
+import * as types from '../util/types';
 import * as util from '../util/util';
 import GithubAPI from '../util/github_api';
+import LeetCodeAPI from '../util/leetcode_api';
+import aquireLeetCodeCredential from './aquireLeetCodeCredential';
 
-import { modifyRequest } from '../util/modify_request';
+interface ImportErr {
+  desc: string;
+  type: 'leetcode' | 'github';
+  err?: Error;
+}
 
 export default class ImportSubmissionsController {
-  doImport = async () => {
-    let leetCodeTokenStealerTabID = undefined;
 
-    // 1. launch a Leetcode page to steal at least one request with cookie set
-    chrome.tabs.create({ url: `https://leetcode.com/accounts/login/` }, (tab => {
-      leetCodeTokenStealerTabID = tab.id;
-    }));
+  doImport = async (langPref: string[], addLog: (log: string) => void) => {
+    // 1. aquire credentials
+    addLog('aquiring credentials');
+    const [leetCodeAPI, allProblemsResponse] = await aquireLeetCodeCredential();
+    addLog('aquired credentials');
+    const allAcceptedProblems = allProblemsResponse.stat_status_pairs.filter((pair) => pair.status === 'ac');
+    addLog(`queried total ${allProblemsResponse.stat_status_pairs.length} problems, importing ${allAcceptedProblems.length} accepted problems`);
 
-    // 2. wait for first request that has leetcode cookie set
-    const intervalToken = setInterval(async () => {
-      const cookies = await util.getAllCookie('https://leetcode.com');
-      // use `csrftoken` in cookie as signal that user had successfully logged in
-      // since can't really get any callback, just do a setInterval thing
-      if (_.isEmpty(cookies.find((cookie) => cookie.name === 'csrftoken'))) {
-        return;
-      }
-
-      // close the page
-      chrome.tabs.remove(leetCodeTokenStealerTabID);
-
-      // stop refreshing
-      clearInterval(intervalToken);
-
-      // continue app logic
-      this.didReceivedLeetcodeLogin(cookies);
-    }, 1000);
+    // 2. continue app logic
+    this._importProblems(
+      leetCodeAPI,
+      new GithubAPI(await util.getStorage('github_token')),
+      langPref,
+      allAcceptedProblems,
+      (err, problem, index, total) => {
+        const progress = `[${index}/${total}]`;
+        if (err) {
+          addLog(`${progress} unable to import problem ${problem.stat.question__title}, err ${err}`);
+        } else {
+          addLog(`${progress} problem imported ${problem.stat.question__title}`)
+        }
+      },
+    );
   };
 
-  didReceivedLeetcodeLogin = async (cookies: chrome.cookies.Cookie[]) => {
-    console.log('did receive csrf token', cookies);
-    
-    // TODO: update ui here
-
-    // setup request intercept to work around leetcode's anti csrf stuff
-    const requestModifier = modifyRequest({
-      cookie: cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; '),
-      origin: 'https://leetcode.com',
-      referer: 'https://leetcode.com',
-      'x-csrftoken': cookies.find((cookie) => cookie.name === 'csrftoken').value,
-      'x-requested-with': 'XMLHttpRequest',
-    });
-
-    chrome.webRequest.onBeforeSendHeaders.addListener(requestModifier, {
-        urls: [
-          'https://leetcode.com/api/problems/all/',
-          'https://leetcode.com/submissions/latest/',
-          'http://*/*',
-        ],
-      }, [
-        'requestHeaders',
-        'blocking'
-      ]);
-
-    // query for `all problems` api
-    try {
-      await this._syncAllToGithub();
-    } catch (err) {
-      console.log({ err });
-    }
-    chrome.webRequest.onBeforeSendHeaders.removeListener(requestModifier);
-  }
-
-  _syncAllToGithub = async () => {
-    // 1. get all problems
-    const allProblems = (await axios.get('https://leetcode.com/api/problems/all/')).data as AllProblemResponse;
-
-    // 2. filter out all accepted problems
-    const acStats = allProblems.stat_status_pairs
-      .filter((ss) => ss.status === 'ac');
-    console.log(`${acStats.length} problems status === 'ac'`, acStats);
-
+  _importProblems = async (
+    leetCodeAPI: LeetCodeAPI,
+    githubAPI: GithubAPI,
+    langPref: string[],
+    allAcceptedProblems: types.StatStatusPair[],
+    onProblemImportFinish: (importErr: ImportErr, problem: StatStatusPair, index: number, total: number) => void,
+  ) => {
     // 3. post to github with every submission
-    const github = new GithubAPI(await util.getStorage('github_token'));
-    const langPref = await util.getStorage('language_prefs') as string[];
-
-    // 4. fire a bunch of workers to do submissions together
-    // wait for all of them to finish
-    while (!_.isEmpty(acStats)) {
-      const stat = acStats.pop();
-      console.log(`sync stuff`, stat.stat.question__title, await this._syncToGithub(stat, langPref, github));
+    for (const idx of _.range(allAcceptedProblems.length)) {
+      const stat = allAcceptedProblems[idx];
+      const err = await this._syncToGithub(leetCodeAPI, githubAPI, stat, langPref);
+      onProblemImportFinish(err, stat, idx, allAcceptedProblems.length);
     }
   }
 
-  _syncToGithub = async (statStatus: StatStatusPair, langPref: string[], githubAPI: GithubAPI) => {
+  _syncToGithub = async (leetCodeAPI: LeetCodeAPI, githubAPI: GithubAPI, statStatus: StatStatusPair, langPref: string[]) => {
     try {
-      const submission = await this._queryQuestion(statStatus.stat.question_id, langPref);
+      const submission = await this._queryQuestion(leetCodeAPI, statStatus.stat.question_id, langPref);
       if (!submission) {
-        return false;
+        return {
+          type: 'leetcode',
+          desc: 'Unable to query latest submission from leetcode',
+        } as ImportErr;
       }
       const [codeContent, lang] = submission;
       await githubAPI.createOrUpdateFileContent(
@@ -108,9 +75,13 @@ export default class ImportSubmissionsController {
         'auto created commit by LeetGlue',
         codeContent,
       );
-      return true;
-    } catch {
-      return false;
+      return undefined;
+    } catch (err) {
+      return {
+        type: 'leetcode',
+        desc: `unable to push submission to Github ${err && err.toString()}`,
+        err,
+      } as ImportErr;
     }
   }
 
@@ -118,12 +89,17 @@ export default class ImportSubmissionsController {
    * query submission of a problem of a certain language preference
    * return undefined if unable to query submission
    */
-  _queryQuestion = async (qid: number, langPref: string[]) => {
+  _queryQuestion = async (leetCodeAPI: LeetCodeAPI, qid: number, langPref: string[]) => {
+    // merge user provided langPref with all possible ones
+    langPref = [
+      ...langPref, 
+      ..._.keys(types.fileExtensions).filter((lang) => !_.includes(langPref, lang))
+    ];
+
     for (const lang of langPref) {
-      const param = { qid: qid.toString(), lang };
-      const resp = await axios.post('https://leetcode.com/submissions/latest/', param).catch(() => undefined);
-      if (resp && resp.data && resp.data.code) {
-        return [resp.data.code as string, lang];
+      const res = await leetCodeAPI.getLatestSubmission(qid.toString(), lang).catch(() => undefined);
+      if (res && res.code) {
+        return [res.code as string, lang];
       }
     }
     return undefined;

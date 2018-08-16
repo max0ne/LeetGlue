@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 import * as $ from 'jquery';
-import * as React from "react";
 import './style.css';
+import ImportSubmissionsController from './controller/ImportSubmissions';
 
 let count = 0;
 
