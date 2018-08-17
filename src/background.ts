@@ -1,6 +1,6 @@
 import { InjectedRequest } from './util/types';
 import * as submission_handlers from './controller/HandleSubmission';
-import ImportSubmissionsController from './controller/ImportSubmissions';
+import * as util from './util/util';
 
 console.log('backgddd');
 
@@ -14,8 +14,10 @@ chrome.runtime.onMessageExternal.addListener((injectedRequest: InjectedRequest) 
   }
 });
 
-chrome.notifications.onClicked.addListener((noteID) => {
-  chrome.tabs.create({ url: `https://github.com/max0ne/test/commit/${noteID}` });
+chrome.notifications.onClicked.addListener(async (noteID) => {
+  const github_owner = await util.getStorage('github_owner');
+  const github_repo = await util.getStorage('github_repo');
+  chrome.tabs.create({ url: `https://github.com/${github_owner}/${github_repo}/commit/${noteID}` });
 });
 
 setTimeout(() => {

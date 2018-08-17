@@ -52,7 +52,7 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
   const token = await util.getStorage('github_token');
   const user = await util.getStorage('github_owner') as string;
   const repo = await util.getStorage('github_repo') as string;
-  const msg = 'auto created commit by LeetGlue';
+  const msg = `[auto created commit by LeetGlue] ${filename}`;
   const api = new GithubAPI(token);
   const githubFile = (await api.getFile(user, repo, filename).catch(() => { })) || {};
   const putFileResponse = await api.putFileContent(user, repo, filename, msg, typed_code, githubFile.sha);
