@@ -1,24 +1,117 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Getting Started Extension's Popup</title>
-    <style>
-      body {
-        font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
-        font-size: 100%;
-      }
-    </style>
-    <script src="js/vendor.js"></script>
-  </head>
-  <body>
-    <ul style="min-width: 700px;">
-    <li>Current URL: <span id="url"></span></li>
-    <li>Current Time: <span id="time"></span></li>
-    </ul>
-    <button id="countUp">count up</button>
-    <button id="changeBackground">change background</button>
-    <script src="js/popup.js"></script>
-  </body>
-</html>
 
+<head>
+	<meta charset="UTF-8">
+	<title>Getting Started Extension's Popup</title>
+	<style>
+		@keyframes slideDown {
+			from {
+				position: relative;
+				top: -10px;
+				opacity: 0;
+			}
+			to {
+				position: relative;
+				top: 0px;
+				opacity: 1;
+			}
+		}
+		body {
+			width: 350px;
+			height: 320px;
+			font-size: 100%;
+			margin-left: auto;
+			margin-right: auto;
+			text-align: center;
+			border-radius: 25px;
+			font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+			background: linear-gradient(to bottom, #2c4992 50%, #1a2c5b);
+		}
+		body > h1 {
+			width: 100%;
+			font-size: 24px;
+			color: #b8dff0;
+			font-weight: 100;
+			text-align: center;
+			/* padding-left: 50px; */
+			padding-right: 200px;
+			font-family: 'Avenir';
+			animation: slideDown 0.5s ease-in-out 0s;
+		}
+		body > p {
+			font-size: 16px;
+			color: #b8dff0;
+			font-weight: 100;
+			text-align: left;
+			margin-top: 40px;
+			padding-left: 15px;
+			padding-right: 40px;
+			font-family: 'Avenir';
+			animation: slideDown 1s ease-in-out 0s;
+		}
+		body > input {
+			width: 90%;
+			height: 40px;
+			border: none;
+			outline: none;
+			color: white;
+			font-size: 16px;
+			font-weight: 100;
+			background: none;
+			margin-top: 30px;
+			font-family: 'Avenir';
+			text-decoration: none;
+			border-bottom: 1px solid #b8dff0;
+			background-color: rgba(0,0,0,0);
+		}
+		body > input::placeholder {
+			color: #b8dff0;
+		}
+		body > button {
+			width: 100px;
+			height: 40px;
+			border: none;
+			outline: none;
+			color: white;
+			font-size: 15px;
+			cursor: pointer;
+			font-weight: 200;
+			background: none;
+			margin-top: 28px;
+			border-radius: 10px;
+			font-family: 'Avenir';
+			text-decoration: none;
+			transition-duration: 0.2s;
+			background-color: #7971ea;
+		}
+		body > button:hover {
+			color: rgb(226, 226, 226);
+			background-color: #5850c0;
+		}
+		body > button:active {
+			color: rgb(197, 197, 197);
+			background-color: #4d46b4;
+		}
+	</style>
+	<script src="js/vendor.js"></script>
+</head>
+
+<body>
+	<h1>LeetGlue</h1>
+	<p>Enter the url for the Github repository you want to place your LeetCode solutions into:</p>
+	<input id='url-field' type='text' placeholder='URL'/>
+	<button id='next-btn'>Next</button>
+
+
+	<script src="js/popup.js"></script>
+	<script>
+		const gitRepoField = document.getElementById('url-field');
+
+		gitRepoField.onchange = () => {
+			gitRepoField.style.color = gitRepoField.style.color === 'black' ? 'red' : 'black';
+		}	
+	</script>
+</body>
+
+</html>

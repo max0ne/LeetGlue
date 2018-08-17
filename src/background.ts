@@ -25,6 +25,6 @@ chrome.storage.sync.set({
   language_prefs: ['python3', 'python', 'mysql'],
 });
 
-setTimeout(() => {
-  (new ImportSubmissionsController()).doImport();
-}, 1000);
+// setTimeout(() => {
+//   (new ImportSubmissionsController()).doImport();
+// }, 1000);
