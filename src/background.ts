@@ -20,6 +20,8 @@ chrome.notifications.onClicked.addListener(async (noteID) => {
   chrome.tabs.create({ url: `https://github.com/${github_owner}/${github_repo}/commit/${noteID}` });
 });
 
+
+
 setTimeout(() => {
   chrome.storage.sync.set({
     github_token: '= =',
@@ -29,4 +31,8 @@ setTimeout(() => {
   });
 
   // (new ImportSubmissionsController()).doImport(['python3', 'python', 'mysql']);
+
+  chrome.tabs.create({
+    url: chrome.runtime.getURL('import.html')
+  });
 }, 1000);
