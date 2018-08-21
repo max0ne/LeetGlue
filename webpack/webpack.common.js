@@ -8,6 +8,7 @@ module.exports = {
         background: path.join(__dirname, '../src/background.ts'),
         content_script: path.join(__dirname, '../src/content_script.ts'),
         injected: path.join(__dirname, '../src/injected.ts'),
+        import: path.join(__dirname, '../src/import.ts'),
     },
     output: {
         path: path.join(__dirname, '../dist/js'),
