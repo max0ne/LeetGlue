@@ -1,3 +1,18 @@
-* {
-  margin: 20px;
+#root {
+  padding: 20px;
+}
+
+.render-login-leetcode {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+}
+
+.import-history-spinning {
+  animation: spin 2s linear infinite;
+  display: inline-flex;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

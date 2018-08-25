@@ -50,12 +50,11 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
 
   const filename = `${probname}.${fileExtensions[resp.lang] || resp.lang}`;
   const token = await util.getStorage('github_token');
-  const user = await util.getStorage('github_owner') as string;
-  const repo = await util.getStorage('github_repo') as string;
+  const repoIdentifier = await util.getStorage('github_repo_identifier') as string;
   const msg = `[auto created commit by LeetGlue] ${filename}`;
   const api = new GithubAPI(token);
-  const githubFile = (await api.getFile(user, repo, filename).catch(() => { })) || {};
-  const putFileResponse = await api.putFileContent(user, repo, filename, msg, typed_code, githubFile.sha);
+  const githubFile = (await api.getFile(repoIdentifier, filename).catch(() => { })) || {};
+  const putFileResponse = await api.putFileContent(repoIdentifier, filename, msg, typed_code, githubFile.sha);
   chrome.notifications.create(putFileResponse.commit.sha, {
     type: 'basic',
     title: 'LeetGlue',

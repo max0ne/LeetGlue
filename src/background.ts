@@ -15,9 +15,8 @@ chrome.runtime.onMessageExternal.addListener((injectedRequest: InjectedRequest) 
 });
 
 chrome.notifications.onClicked.addListener(async (noteID) => {
-  const github_owner = await util.getStorage('github_owner');
-  const github_repo = await util.getStorage('github_repo');
-  chrome.tabs.create({ url: `https://github.com/${github_owner}/${github_repo}/commit/${noteID}` });
+  const repoIdentifier = await util.getStorage('github_repo_identifier');
+  chrome.tabs.create({ url: `https://github.com/${repoIdentifier}/commit/${noteID}` });
 });
 
 

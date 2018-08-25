@@ -1,8 +1,6 @@
 export type StorageKeys = (
   'github_token' |
-  'github_owner' |
-  'github_repo' |
-  'language_prefs'
+  'github_repo_identifier'
 );
 
 export interface RequestHeaders {
@@ -223,3 +221,9 @@ export interface RepoResponse {
   subscribers_count: number;
   network_count: number;
 };
+
+export interface ImportErr {
+  desc: string;
+  type: 'leetcode' | 'github';
+  err?: Error;
+}

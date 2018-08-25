@@ -37,8 +37,8 @@ export default class GithubAPI {
   /**
    * query a file object on github
    */
-  getFile = async (owner: string, repo: string, path: string) => {
-    return (await this.client.get(`/repos/${owner}/${repo}/contents/${path}`)).data;
+  getFile = async (repoIdentifier: string, path: string) => {
+    return (await this.client.get(`/repos/${repoIdentifier}/contents/${path}`)).data;
   }
 
   /**
@@ -46,7 +46,7 @@ export default class GithubAPI {
    * update file if `sha` is defined
    */
   putFileContent = async (
-    owner: string, repo: string,
+    repoIdentifier: string,
     path: string, message: string, content: string,
     sha: string | undefined) => {
     const body = {
@@ -56,7 +56,7 @@ export default class GithubAPI {
     if (sha) {
       body['sha'] = sha;
     }
-    return (await this.client.put(`/repos/${owner}/${repo}/contents/${path}`, body)).data;
+    return (await this.client.put(`/repos/${repoIdentifier}/contents/${path}`, body)).data;
   }
 
   /**
@@ -64,9 +64,9 @@ export default class GithubAPI {
    * update file if exists
    */
   createOrUpdateFileContent = async (
-    owner: string, repo: string,
+    repoIdentifier: string,
     path: string, message: string, content: string) => {
-    const sha = (await this.getFile(owner, repo, path).catch(() => ({}))).sha;
-    return this.putFileContent(owner, repo, path, message, content, sha);
+    const sha = (await this.getFile(repoIdentifier, path).catch(() => ({}))).sha;
+    return this.putFileContent(repoIdentifier, path, message, content, sha);
   }
 }
