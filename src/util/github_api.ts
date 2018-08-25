@@ -6,9 +6,12 @@ export default class GithubAPI {
   client: AxiosInstance;
 
   constructor(token) {
+    const authHeader = token ? {
+      Authorization: `token ${token}`,
+    } : { };
     this.client = axios.create({
       headers: {
-        Authorization: `token ${token}`,
+        ...authHeader
       },
       baseURL: 'https://api.github.com',
     });
@@ -25,10 +28,10 @@ export default class GithubAPI {
   /**
    * get repo detail
    * useful for checking if current user has `push` permission to this repo
-   * use (await api.getRepo(owner, repo)).permissions.push to check for having push permission
+   * use (await api.getRepo(repoIdentifier)).permissions.push to check for having push permission
    */
-  getRepo = async (owner: string, repo: string) => {
-    return (await this.client.get(`/repos/${owner}/${repo}`)).data as types.RepoResponse;
+  getRepo = async (repoIdentifier) => {
+    return (await this.client.get(`/repos/${repoIdentifier}`)).data as types.RepoResponse;
   }
 
   /**
