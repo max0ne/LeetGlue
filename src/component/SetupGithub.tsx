@@ -167,7 +167,7 @@ export default class SetupGithub extends React.Component {
       <Form>
         <Form.Field>
           <label>
-            I need a Github api token, I'm too lazy to do OAuth so please just generate a personal access token
+            Please provide a Github api token, I'm too lazy to do OAuth so please just generate a personal access token
           </label>
           <label>
             Please make sure you select `repo` field because I need push permission to your repo.

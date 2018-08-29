@@ -60,11 +60,11 @@ class Import extends React.Component {
     ].map((step) => ({
       ...step,
       active: this.state.step === step.key,
-      onClick: this.state.githubRepoIdentifier && (() => {
+      onClick: this.state.githubRepoIdentifier ? (() => {
         this.setState({
           step: step.key,
         });
-      }),
+      }) : undefined,
     }));
   }
 
