@@ -5,6 +5,9 @@ class Solution:
         :type s2: str
         :rtype: bool
         """
+        c1 = collections.Counter(s1)
+        return any(collections.Counter(s2[idx : idx + len(s1)]) == c1 for idx in range(len(s2) - len(s1) + 1))
+        
         c1 = [0] * 26
         c2 = [0] * 26
         for ch in s1:
