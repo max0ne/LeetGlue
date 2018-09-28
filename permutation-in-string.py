@@ -10,9 +10,9 @@ class Solution:
         lo = 0
         for hi in range(len(s2)):
             c2[s2[hi]] += 1
-            if all(c1[ch] == c2[ch] for ch in c1.keys()):
+            if all(c1[ch] == c2[ch] for ch in 'werqtyuiopasdfghjklzxcvbnm'):
                 return True
-            while any(c1[key] < c2[key] for key in c2.keys()):
+            while any(c1[key] < c2[key] for key in 'werqtyuiopasdfghjklzxcvbnm'):
                 c2[s2[lo]] -= 1
                 lo += 1
         return False
