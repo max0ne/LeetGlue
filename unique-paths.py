@@ -5,8 +5,6 @@ class Solution:
         :type n: int
         :rtype: int
         """
-        if not m or not n:
-            return 0
         dp = [[1] * n for _ in range(m)]
         for ii in range(1, len(dp)):
             for jj in range(1, len(dp[0])):
