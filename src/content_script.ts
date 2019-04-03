@@ -4,7 +4,7 @@
  */
 var s = document.createElement('script');
 s.src = chrome.runtime.getURL('js/injected.js');
-s.onload = function () {
+s.onload = function() {
   this.remove();
 };
 

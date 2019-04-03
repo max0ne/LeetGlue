@@ -30,16 +30,16 @@ class Import extends React.Component {
       step: 'import',
     });
     chrome.storage.sync.set({
-      'github_repo_identifier': repoIdentifier,
-      'github_token': token,
+      github_repo_identifier: repoIdentifier,
+      github_token: token,
     });
-  }
+  };
 
   _handleImportComplete = () => {
     this.setState({
       step: 'done',
     });
-  }
+  };
 
   _steps = () => {
     return [
@@ -57,20 +57,22 @@ class Import extends React.Component {
         key: 'done',
         title: 'Done',
       },
-    ].map((step) => ({
+    ].map(step => ({
       ...step,
       active: this.state.step === step.key,
-      onClick: this.state.githubRepoIdentifier ? (() => {
-        this.setState({
-          step: step.key,
-        });
-      }) : undefined,
+      onClick: this.state.githubRepoIdentifier
+        ? () => {
+            this.setState({
+              step: step.key,
+            });
+          }
+        : undefined,
     }));
-  }
+  };
 
   renderFinish = () => {
     const gotoLeetcode = () => {
-      chrome.tabs.getCurrent((tab) => {
+      chrome.tabs.getCurrent(tab => {
         chrome.tabs.remove(tab.id);
         chrome.tabs.create({
           url: 'https://leetcode.com/',
@@ -84,25 +86,25 @@ class Import extends React.Component {
         <a onClick={gotoLeetcode}>Goto leetcode.com</a>
       </div>
     );
-  }
+  };
 
   render() {
     return (
       <div>
-        <StepGroup items={this._steps()}/>
-        {
-          this.state.step === 'github' ? 
-            <SetupGithub completion={this._handleGithubSetupComplete} /> :
-            this.state.step === 'import' ? 
-            <ImportHistory 
-              githubToken={this.state.githubToken}
-              githubRepoIdentifier={this.state.githubRepoIdentifier}
-              completion={this._handleImportComplete}
-            /> :
-            this.renderFinish()
-        }
+        <StepGroup items={this._steps()} />
+        {this.state.step === 'github' ? (
+          <SetupGithub completion={this._handleGithubSetupComplete} />
+        ) : this.state.step === 'import' ? (
+          <ImportHistory
+            githubToken={this.state.githubToken}
+            githubRepoIdentifier={this.state.githubRepoIdentifier}
+            completion={this._handleImportComplete}
+          />
+        ) : (
+          this.renderFinish()
+        )}
       </div>
-    )
+    );
   }
 }
 
