@@ -24,8 +24,8 @@ chrome.notifications.onClicked.addListener(async noteID => {
   });
 });
 
-setTimeout(() => {
-  chrome.tabs.create({
-    url: chrome.runtime.getURL('import.html'),
-  });
-}, 1000);
+// setTimeout(() => {
+//   chrome.tabs.create({
+//     url: chrome.runtime.getURL('import.html'),
+//   });
+// }, 1000);
