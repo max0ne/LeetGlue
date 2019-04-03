@@ -5,6 +5,7 @@ import * as util from './util/util';
 console.log('backgddd');
 
 chrome.runtime.onMessageExternal.addListener((injectedRequest: InjectedRequest) => {
+  console.log('received msg', injectedRequest);
   const checkMatch = submission_handlers.checkPattern.match(injectedRequest.url);
   const submitMatch = submission_handlers.submissionPattern.match(injectedRequest.url);
   if (checkMatch && checkMatch.subid) {
@@ -14,24 +15,17 @@ chrome.runtime.onMessageExternal.addListener((injectedRequest: InjectedRequest) 
   }
 });
 
-chrome.notifications.onClicked.addListener(async (noteID) => {
+chrome.notifications.onClicked.addListener(async noteID => {
+  console.log('received notification click', noteID);
+
   const repoIdentifier = await util.getStorage('github_repo_identifier');
-  chrome.tabs.create({ url: `https://github.com/${repoIdentifier}/commit/${noteID}` });
+  chrome.tabs.create({
+    url: `https://github.com/${repoIdentifier}/commit/${noteID}`,
+  });
 });
 
-
-
 setTimeout(() => {
-  chrome.storage.sync.set({
-    github_token: '= =',
-    github_owner: 'max0ne',
-    github_repo: 'leetcode',
-    language_prefs: ['python3', 'python', 'mysql'],
-  });
-
-  // (new ImportSubmissionsController()).doImport(['python3', 'python', 'mysql']);
-
   chrome.tabs.create({
-    url: chrome.runtime.getURL('import.html')
+    url: chrome.runtime.getURL('import.html'),
   });
 }, 1000);

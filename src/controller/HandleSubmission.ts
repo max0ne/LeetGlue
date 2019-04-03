@@ -2,12 +2,7 @@ import * as UrlPattern from 'url-pattern';
 import * as _ from 'lodash';
 import GithubAPI from '../util/github_api';
 import * as util from '../util/util';
-import {
-  CheckResponse,
-  SubmissionResponse,
-  InjectedRequest,
-  fileExtensions,
-} from '../util/types';
+import { CheckResponse, SubmissionResponse, InjectedRequest, fileExtensions } from '../util/types';
 
 export const checkPattern = new UrlPattern('*/submissions/detail/:subid/check*');
 export const submissionPattern = new UrlPattern('*/problems/:probname/submit*');
@@ -19,7 +14,7 @@ const pendingSubmissions = [] as InjectedRequest[];
 
 export const handleSubmission = (injectedRequest: InjectedRequest, probname: string) => {
   pendingSubmissions.push(injectedRequest);
-}
+};
 
 export const handleCheck = async (injectedRequest: InjectedRequest, subid: string) => {
   const resp = injectedRequest.responseBody as CheckResponse;
@@ -30,8 +25,9 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
     return;
   }
 
-  const submission = pendingSubmissions.find((sub) => (
-    (sub.responseBody as SubmissionResponse).submission_id || '').toString() == subid);
+  const submission = pendingSubmissions.find(
+    sub => ((sub.responseBody as SubmissionResponse).submission_id || '').toString() == subid,
+  );
   // submission request not found - unexpected, should toast some error
   if (!submission) {
     // TODO: toast err
@@ -44,21 +40,31 @@ export const handleCheck = async (injectedRequest: InjectedRequest, subid: strin
   const { probname } = submissionPattern.match(submission.url);
   if (!typed_code || !probname) {
     // TODO: toast err
-    console.error(`!typed_code || !probname`, { typed_code, probname, submission });
+    console.error(`!typed_code || !probname`, {
+      typed_code,
+      probname,
+      submission,
+    });
     return;
   }
 
   const filename = `${probname}.${fileExtensions[resp.lang] || resp.lang}`;
   const token = await util.getStorage('github_token');
-  const repoIdentifier = await util.getStorage('github_repo_identifier') as string;
+  const repoIdentifier = (await util.getStorage('github_repo_identifier')) as string;
   const msg = `[auto created commit by LeetGlue] ${filename}`;
   const api = new GithubAPI(token);
-  const githubFile = (await api.getFile(repoIdentifier, filename).catch(() => { })) || {};
-  const putFileResponse = await api.putFileContent(repoIdentifier, filename, msg, typed_code, githubFile.sha);
+  const githubFile = (await api.getFile(repoIdentifier, filename).catch(() => {})) || {};
+  const putFileResponse = await api.putFileContent(
+    repoIdentifier,
+    filename,
+    msg,
+    typed_code,
+    githubFile.sha,
+  );
   chrome.notifications.create(putFileResponse.commit.sha, {
     type: 'basic',
     title: 'LeetGlue',
     message: `💪 [${filename}] Pushed to your Github`,
     iconUrl: chrome.runtime.getURL('Octocat.png'),
   });
-}
+};

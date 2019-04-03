@@ -1,8 +1,6 @@
 import * as _ from 'lodash';
 
-import {
-  StatStatusPair,
-} from '../util/types';
+import { StatStatusPair } from '../util/types';
 
 import * as types from '../util/types';
 import * as util from '../util/util';
@@ -11,7 +9,6 @@ import LeetCodeAPI from '../util/leetcode_api';
 import aquireLeetCodeCredential from './aquireLeetCodeCredential';
 
 export default class ImportSubmissionsController {
-
   // doImport = async (langPref: string[]) => {
   //   // 1. aquire credentials
   //   console.log('aquiring credentials');
@@ -43,18 +40,39 @@ export default class ImportSubmissionsController {
     repoIdentifier: string,
     langPref: string[],
     allAcceptedProblems: types.StatStatusPair[],
-    onProblemImportFinish: (importErr: types.ImportErr, problem: StatStatusPair, index: number, total: number) => void,
+    onProblemImportFinish: (
+      importErr: types.ImportErr,
+      problem: StatStatusPair,
+      index: number,
+      total: number,
+    ) => void,
   ) => {
     for (const idx of _.range(allAcceptedProblems.length)) {
       const stat = allAcceptedProblems[idx];
-      const err = await this._syncToGithub(leetCodeAPI, githubAPI, stat, repoIdentifier, langPref);
+      const err = await this._syncToGithub(
+        leetCodeAPI,
+        githubAPI,
+        stat,
+        repoIdentifier,
+        langPref,
+      );
       onProblemImportFinish(err, stat, idx, allAcceptedProblems.length);
     }
-  }
+  };
 
-  _syncToGithub = async (leetCodeAPI: LeetCodeAPI, githubAPI: GithubAPI, statStatus: StatStatusPair, repoIdentifier: string, langPref: string[]) => {
+  _syncToGithub = async (
+    leetCodeAPI: LeetCodeAPI,
+    githubAPI: GithubAPI,
+    statStatus: StatStatusPair,
+    repoIdentifier: string,
+    langPref: string[],
+  ) => {
     try {
-      const submission = await this._queryQuestion(leetCodeAPI, statStatus.stat.question_id, langPref);
+      const submission = await this._queryQuestion(
+        leetCodeAPI,
+        statStatus.stat.question_id,
+        langPref,
+      );
       if (!submission) {
         return {
           type: 'leetcode',
@@ -76,21 +94,29 @@ export default class ImportSubmissionsController {
         err,
       } as types.ImportErr;
     }
-  }
+  };
 
   /**
    * query submission of a problem of a certain language preference
    * return undefined if unable to query submission
    */
-  _queryQuestion = async (leetCodeAPI: LeetCodeAPI, qid: number, langPref: string[]) => {
+  _queryQuestion = async (
+    leetCodeAPI: LeetCodeAPI,
+    qid: number,
+    langPref: string[],
+  ) => {
     // merge user provided langPref with all possible ones
     langPref = [
-      ...langPref, 
-      ..._.keys(types.fileExtensions).filter((lang) => !_.includes(langPref, lang))
+      ...langPref,
+      ..._.keys(types.fileExtensions).filter(
+        lang => !_.includes(langPref, lang),
+      ),
     ];
 
     for (const lang of langPref) {
-      const res = await leetCodeAPI.getLatestSubmission(qid.toString(), lang).catch(() => undefined);
+      const res = await leetCodeAPI
+        .getLatestSubmission(qid.toString(), lang)
+        .catch(() => undefined);
       if (res && res.code) {
         return [res.code as string, lang];
       }
